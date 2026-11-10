@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>樂譜移調小幫手</title>
+<style>
+:root{
+ --canvas:#fff3dc;--paper:#fff;--powder:#ffe7c7;--powder-soft:#fff9ed;
+ --sky:#86d8ec;--sky-soft:#e6f8fb;--indigo:#8c79d9;--indigo-soft:#eee9ff;
+ --primary:#cc4352;--primary-dark:#a93645;--primary-soft:#ffe2e3;
+ --green:#23856b;--green-soft:#e3f7ef;--amber:#9a6400;--amber-soft:#fff0bd;
+ --orange:#f28c52;--yellow:#f7c948;--ink:#463544;--soft-ink:#665566;
+ --muted:#887584;--line:#ead8cc;--shadow:0 22px 60px rgba(142,88,70,.16);
+ --shadow-soft:0 12px 28px rgba(142,88,70,.11);
+}
+*{box-sizing:border-box}
+input,select,textarea{max-width:100%;font:inherit}
+body{margin:0;min-height:100vh;font-family:"Microsoft JhengHei","Noto Sans TC",system-ui,sans-serif;color:var(--ink);
+ background:radial-gradient(circle at 8% 10%,rgba(247,201,72,.38),transparent 25%),
+ radial-gradient(circle at 92% 12%,rgba(242,140,82,.26),transparent 28%),
+ radial-gradient(circle at 52% 96%,rgba(89,195,165,.22),transparent 32%),
+ linear-gradient(135deg,#fff0d2 0%,#fff9ed 48%,#ffe8dc 100%);background-attachment:fixed}
+.container{width:min(1120px,calc(100% - 30px));margin:auto;padding:24px 0 56px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 18px;border-radius:24px;background:rgba(255,255,255,.86);
+ border:2px solid #fff;box-shadow:var(--shadow-soft);margin-bottom:22px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:950}
+.logo{width:43px;height:43px;border-radius:16px;display:grid;place-items:center;color:white;background:linear-gradient(135deg,var(--primary-dark),var(--primary));font-size:23px;transform:rotate(-5deg)}
+.menu{display:flex;gap:8px;font-size:14px;font-weight:800}.menu a{color:var(--soft-ink);text-decoration:none;padding:8px 12px;border-radius:999px}.menu a:hover{background:var(--amber-soft)}
+.hero{display:grid;grid-template-columns:1.08fr .92fr;gap:20px;margin-bottom:22px}
+.hero-card,.side-card,.section{border:2px solid rgba(255,255,255,.92);box-shadow:var(--shadow-soft);backdrop-filter:blur(14px)}
+.hero-card{position:relative;overflow:hidden;min-height:310px;padding:clamp(24px,4vw,42px);border-radius:34px;background:linear-gradient(135deg,rgba(255,255,255,.94),rgba(255,255,255,.68)),linear-gradient(135deg,rgba(247,201,72,.25),rgba(242,140,82,.2),rgba(89,195,165,.18))}
+.hero-card:after{content:"🎼";position:absolute;right:25px;bottom:12px;font-size:105px;opacity:.15;transform:rotate(-12deg)}
+.eyebrow{display:inline-block;padding:8px 13px;border-radius:999px;background:var(--amber-soft);color:var(--amber);font-size:13px;font-weight:950;margin-bottom:16px}
+h1{font-size:clamp(34px,5vw,56px);line-height:1.13;margin:0;letter-spacing:.02em}
+.accent{background:linear-gradient(90deg,var(--primary-dark),var(--primary),var(--orange));background-clip:text;color:transparent}
+.hero p{max-width:610px;line-height:1.85;color:var(--soft-ink);font-size:16px}
+.side-stack{display:grid;gap:14px}
+.side-card{border-radius:28px;padding:20px;background:rgba(255,255,255,.82)}
+.side-card.sunny{background:linear-gradient(135deg,rgba(255,240,189,.94),rgba(255,255,255,.82))}
+.side-card h2{margin:0 0 7px;font-size:21px}.side-card p{margin:0;color:var(--soft-ink);line-height:1.7}
+.tip{display:flex;gap:12px;align-items:center;padding:11px;border-radius:17px;background:rgba(255,255,255,.72);margin-top:10px}
+.tip-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:13px;background:var(--sky-soft);font-size:19px;flex:none}
+.section{background:rgba(255,255,255,.86);border-radius:30px;padding:24px;margin-bottom:20px}
+.section-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-end;margin-bottom:17px}
+.section h2{margin:0;font-size:25px}.desc{margin:6px 0 0;color:var(--soft-ink);line-height:1.7}
+.workspace{display:grid;grid-template-columns:270px minmax(0,1fr);gap:17px}
+.sidebar,.main-panel{border-radius:24px;background:rgba(255,255,255,.9);border:1px solid var(--line);padding:18px;min-width:0}
+.sidebar h3{margin:0 0 14px}.field{display:grid;gap:7px;margin-bottom:15px}
+label{font-weight:850;font-size:14px}
+select,textarea,input[type=text]{width:100%;border:1.5px solid var(--line);border-radius:14px;padding:12px 13px;background:white;color:var(--ink);outline:none}
+select:focus,textarea:focus,input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(204,67,82,.12)}
+textarea{min-height:225px;resize:vertical;font-family:Consolas,Monaco,monospace;font-size:14px;line-height:1.65}
+.btn{border:0;border-radius:999px;padding:13px 17px;color:white;background:linear-gradient(135deg,var(--primary),var(--primary-dark));font-weight:950;cursor:pointer;box-shadow:0 12px 24px rgba(204,67,82,.2);transition:.18s}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.04)}
+.btn.light{background:white;color:var(--primary-dark);border:1.5px solid rgba(204,67,82,.2);box-shadow:none}
+.btn.green{background:linear-gradient(135deg,#2a9878,#176f59)}
+.btn-row{display:flex;gap:9px;flex-wrap:wrap;margin-top:13px}
+.btn:focus-visible,a:focus-visible{outline:3px solid rgba(204,67,82,.35);outline-offset:3px}
+.hint{font-size:13px;color:var(--muted);line-height:1.65}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:15px}
+.stat{padding:12px;border-radius:18px;background:var(--powder-soft);border:1px solid var(--line)}
+.stat strong{display:block;font-size:23px;color:var(--primary-dark)}.stat span{font-size:12px;color:var(--muted);font-weight:800}
+.result-wrap{margin-top:15px}
+.result-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.result-head h3{margin:0}
+.result{min-height:120px;background:#4a3245;color:#fff4e8;border-radius:20px;padding:17px;white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.7 Consolas,Monaco,monospace;overflow-x:auto}
+.message{display:none;margin-top:13px;padding:13px 15px;border-radius:16px;line-height:1.65;font-weight:800}
+.message.error{display:block;color:#96324b;background:#ffe3ea;border:1px solid #f2bdc9}
+.message.success{display:block;color:#176f59;background:var(--green-soft);border:1px solid #bde8d8}
+.key-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.key-card{padding:14px;border-radius:18px;background:var(--powder-soft);border:1px solid var(--line)}
+.key-card b{display:block;color:var(--primary-dark);margin-bottom:4px}.key-card span{font-size:13px;color:var(--muted)}
+details{border-radius:18px;background:var(--powder-soft);border:1px solid var(--line);margin-top:12px}
+summary{cursor:pointer;padding:14px;font-weight:900}details p{padding:0 14px 14px;margin:0;line-height:1.75;color:var(--soft-ink)}
+@media(max-width:850px){.hero{grid-template-columns:1fr}.workspace{grid-template-columns:1fr}.key-grid{grid-template-columns:repeat(2,1fr)}.menu{display:none}}
+@media(max-width:560px){.container{width:calc(100% - 18px);padding-top:12px}.topbar{padding:11px 13px}.section{padding:16px;border-radius:24px}.hero-card{min-height:auto;border-radius:27px}.stats{grid-template-columns:1fr}.btn-row .btn{width:100%}.key-grid{grid-template-columns:1fr 1fr}h1{font-size:36px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main class="container">
+<nav class="topbar" aria-label="主要導覽">
+ <div class="brand"><div class="logo">♫</div><span>樂譜移調小幫手</span></div>
+ <div class="menu"><a href="#converter">移調工具</a><a href="#guide">使用說明</a><a href="#keys">調性表</a></div>
+</nav>
+<section class="hero">
+ <div class="hero-card">
+  <div class="eyebrow">🎹 MUSIC TRANSPOSER</div>
+  <h1>換個調性，<br><span class="accent">讓音樂更合適！</span></h1>
+  <p>輸入 ABC 樂譜文字，選擇目標調性，即可將旋律音符、升降記號與和弦名稱一起移調。免安裝、單一 HTML 檔，離線也能使用。</p>
+ </div>
+ <aside class="side-stack">
+  <div class="side-card sunny"><h2>☀️ 快速開始</h2><p>先貼上 ABC notation，再選擇要轉換到的調性，按下「開始移調」即可。</p></div>
+  <div class="side-card"><h2>📌 使用小提醒</h2>
+   <div class="tip"><div class="tip-icon">🎼</div><div><b>支援 ABC 格式</b><div class="hint">例如 X:1、T:、M:、K: 與音符序列。</div></div></div>
+   <div class="tip"><div class="tip-icon">🔒</div><div><b>資料留在你的裝置</b><div class="hint">不會上傳樂譜或呼叫外部服務。</div></div></div>
+  </div>
+ </aside>
+</section>
+<section class="section" id="converter">
+ <div class="section-head"><div><h2>🎯 一、樂譜移調工作區</h2><p class="desc">以 ABC notation 作為輸入格式；原始內容不會被覆蓋，可隨時重新轉換。</p></div></div>
+ <div class="workspace">
+  <aside class="sidebar">
+   <h3>⚙️ 移調設定</h3>
+   <div class="field"><label for="targetKey">目標調性</label>
+    <select id="targetKey">
+     <option value="C">C 大調 / A 小調</option><option value="G">G 大調 / E 小調</option>
+     <option value="D">D 大調 / B 小調</option><option value="A">A 大調 / F♯ 小調</option>
+     <option value="E">E 大調 / C♯ 小調</option><option value="B">B 大調 / G♯ 小調</option>
+     <option value="F#">F♯ 大調 / D♯ 小調</option><option value="C#">C♯ 大調 / A♯ 小調</option>
+     <option value="F">F 大調 / D 小調</option><option value="Bb">B♭ 大調 / G 小調</option>
+     <option value="Eb">E♭ 大調 / C 小調</option><option value="Ab">A♭ 大調 / F 小調</option>
+     <option value="Db">D♭ 大調 / B♭ 小調</option><option value="Gb">G♭ 大調 / E♭ 小調</option>
+     <option value="Cb">C♭ 大調 / A♭ 小調</option>
+    </select>
+   </div>
+   <div class="field"><label for="direction">移調方向</label>
+    <select id="direction"><option value="auto">依原調性自動計算</option><option value="sharp">偏向升記號（♯）</option><option value="flat">偏向降記號（♭）</option></select>
+   </div>
+   <div class="field"><label for="octave">八度處理</label>
+    <select id="octave"><option value="keep">維持原八度</option><option value="up">整體高八度</option><option value="down">整體低八度</option></select>
+   </div>
+   <button class="btn" id="transposeBtn" type="button">✨ 開始移調</button>
+   <button class="btn light" id="resetBtn" type="button" style="width:100%;margin-top:9px">↺ 還原範例</button>
+   <p class="hint">注意：此工具處理的是 ABC 音符文字，不會直接辨識掃描圖片、PDF 五線譜或手寫樂譜。</p>
+  </aside>
+  <div class="main-panel">
+   <div class="stats">
+    <div class="stat"><strong id="fromStat">C</strong><span>輸入原調</span></div>
+    <div class="stat"><strong id="toStat">C</strong><span>轉換目標調</span></div>
+    <div class="stat"><strong id="intervalStat">0</strong><span>半音差</span></div>
+   </div>
+   <div class="field"><label for="abcInput">📝 貼上 ABC 樂譜</label>
+    <textarea id="abcInput" spellcheck="false" aria-describedby="abcHelp">X:1
+T:小星星（示範）
+M:4/4
+L:1/4
+K:C
+C C G G | A A G2 | F F E E | D D C2 |
+G G F F | E E D2 | G G F F | E E D2 |
+C C G G | A A G2 | F F E E | D D C2 |</textarea>
+    <div id="abcHelp" class="hint">可貼上含有 K: 調性欄位的 ABC notation。例：K:C 代表 C 大調。</div>
+   </div>
+   <div class="result-wrap">
+    <div class="result-head"><h3>📄 移調結果</h3><span class="hint" id="resultLabel">尚未轉換</span></div>
+    <pre class="result" id="output" aria-live="polite">移調後的 ABC 樂譜會顯示在這裡。</pre>
+    <div class="btn-row"><button class="btn green" id="copyBtn" type="button">📋 複製結果</button><button class="btn light" id="downloadBtn" type="button">⬇️ 下載 ABC 檔</button></div>
+    <div id="message" class="message" role="status" aria-live="polite"></div>
+   </div>
+  </div>
+ </div>
+</section>
+<section class="section" id="guide">
+ <div class="section-head"><div><h2>💡 二、使用方式</h2><p class="desc">三個步驟完成轉調，適合已經有 ABC notation 的樂譜。</p></div></div>
+ <div class="key-grid">
+  <div class="key-card"><b>① 貼上樂譜</b><span>在左側編輯區貼入 ABC 文字。</span></div>
+  <div class="key-card"><b>② 選擇新調性</b><span>例如將 C 大調轉為 D 大調。</span></div>
+  <div class="key-card"><b>③ 執行移調</b><span>系統會更新 K: 調性與音符。</span></div>
+  <div class="key-card"><b>④ 匯出使用</b><span>複製結果或下載 .abc 檔案。</span></div>
+ </div>
+ <details><summary>ABC notation 是什麼？</summary><p>ABC notation 是以文字表示音樂的記譜格式。常見欄位包括 X:（編號）、T:（標題）、M:（拍號）、L:（預設音符長度）、K:（調性）；旋律則以 C、D、E 等音名字母表示。</p></details>
+ <details><summary>這個工具目前有哪些限制？</summary><p>目前以 ABC 樂譜文字為輸入，不支援直接上傳或辨識 PDF、JPG、PNG 五線譜，也不解析 MusicXML、MIDI。和弦名稱及常見 ABC 音符、升降記號會一併轉換；複雜的微分音、特殊裝飾記號或非標準 ABC 語法可能需要人工校對。</p></details>
+</section>
+<section class="section" id="keys">
+ <div class="section-head"><div><h2>🎨 三、常用調性速查</h2><p class="desc">大調與其關係小調共用相同調號。</p></div></div>
+ <div class="key-grid">
+  <div class="key-card"><b>C 大調</b><span>0 個升降記號</span></div><div class="key-card"><b>G 大調</b><span>1 個升記號</span></div>
+  <div class="key-card"><b>D 大調</b><span>2 個升記號</span></div><div class="key-card"><b>A 大調</b><span>3 個升記號</span></div>
+  <div class="key-card"><b>F 大調</b><span>1 個降記號</span></div><div class="key-card"><b>B♭ 大調</b><span>2 個降記號</span></div>
+  <div class="key-card"><b>E♭ 大調</b><span>3 個降記號</span></div><div class="key-card"><b>A♭ 大調</b><span>4 個降記號</span></div>
+ </div>
+</section>
+<footer class="hint" style="text-align:center;padding:8px">🎵 樂譜移調小幫手｜單檔 HTML・原生 JavaScript・離線可用</footer>
+</main>
+<script>
+"use strict";
+// 調性以半音數表示；ABC K: 欄位會更新為目標調性。
+const KEY_PC={C:0,"C#":1,Db:1,D:2,"D#":3,Eb:3,E:4,F:5,"F#":6,Gb:6,G:7,"G#":8,Ab:8,A:9,"A#":10,Bb:10,B:11,Cb:11};
+const KEY_ACC={C:"",G:"^F",D:"^F^C",A:"^F^C^G",E:"^F^C^G^D",B:"^F^C^G^D^A","F#":"^F^C^G^D^A^E","C#":"^F^C^G^D^A^E^B",F:"_B",Bb:"_B_E",Eb:"_B_E_A",Ab:"_B_E_A_D",Db:"_B_E_A_D_G",Gb:"_B_E_A_D_G_C",Cb:"_B_E_A_D_G_C_F"};
+const SHARP_NAMES=["C","^C","D","^D","E","F","^F","G","^G","A","^A","B"];
+const FLAT_NAMES=["C","_D","D","_E","E","F","_G","G","_A","A","_B","B"];
+const $=id=>document.getElementById(id);
+const demo=$("abcInput").value;
+function parseKey(text){
+ const m=text.match(/^\s*K:\s*([A-Ga-g])([#b]?)(m|min|minor)?(?:\s|$)/m);
+ if(!m)return null;
+ let root=m[1].toUpperCase()+(m[2]||"");
+ if(m[2]==="#")root=m[1].toUpperCase()+"#";
+ if(m[2]==="b")root=m[1].toUpperCase()+"b";
+ const pc=KEY_PC[root];
+ if(pc===undefined)return null;
+ return {root,pc,minor:!!m[3]};
+}
+function canonicalKey(root,prefer){
+ const candidates=Object.keys(KEY_PC).filter(k=>KEY_PC[k]===KEY_PC[root]);
+ if(candidates.includes(root))return root;
+ return candidates.find(k=>prefer==="flat"?k.includes("b"):k.includes("#"))||candidates[0];
+}
+function noteToMidi(letter,acc,oct){
+ const natural={C:0,D:2,E:4,F:5,G:7,A:9,B:11}[letter.toUpperCase()];
+ return (oct+1)*12+natural+acc;
+}
+function midiToABC(midi,prefer){
+ const octave=Math.floor(midi/12)-1, pc=((midi%12)+12)%12;
+ const names=prefer==="flat"?FLAT_NAMES:SHARP_NAMES;
+ let token=names[pc],acc="";
+ if(token[0]==="^"||token[0]==="_"){acc=token[0];token=token.slice(1);}
+ let letter=token;
+ // ABC: uppercase C is octave 4; lowercase c is octave 5; comma/apostrophe shift octave.
+ let base=letter;
+ if(octave>=5)base=letter.toLowerCase();
+ let shift=octave>=5?octave-5:4-octave;
+ return acc+base+(octave>=5?"'".repeat(shift):",".repeat(shift));
+}
+function transposeABC(source,targetRoot,prefer,octaveMode){
+ const old=parseKey(source);
+ if(!old)throw new Error("找不到有效的 K: 調性欄位。請確認樂譜中有 K:C、K:G 或 K:Am 等標記。");
+ const targetPc=KEY_PC[targetRoot],delta=(targetPc-old.pc+12)%12;
+ let signed=delta>6?delta-12:delta;
+ if(delta===6)signed=prefer==="flat"?-6:6;
+ const octaveShift=octaveMode==="up"?12:octaveMode==="down"?-12:0;
+ const total=signed+octaveShift;
+ const target=canonicalKey(targetRoot,prefer);
+ // 逐字處理 ABC 音符，保留節奏、連線、休止符與其他文字。
+ // 音符語法：可選升降記號、A-G 音名、八度逗號/撇號、長度數字與連音符。
+ const noteRegex=/(^|[^A-Za-z])([_^=]{0,2})([A-Ga-g])([,']*)(\d*\/?\d*)(\.*)/g;
+ let output=source.replace(noteRegex,(whole,prefix,acc,letter,oct,length,dots)=>{
+   const isLower=letter===letter.toLowerCase();
+   const baseOct=isLower?5:4;
+   const octave=baseOct+(oct.split("'").length-1)-(oct.split(",").length-1);
+   const natural={C:0,D:2,E:4,F:5,G:7,A:9,B:11}[letter.toUpperCase()];
+   let alteration=acc.includes("^")?acc.split("^").length-1:acc.includes("_")?-(acc.split("_").length-1):0;
+   if(acc.includes("="))alteration=0;
+   const midi=(octave+1)*12+natural+alteration+total;
+   return prefix+midiToABC(midi,prefer)+length+dots;
+ });
+ // 轉換和弦標記中的根音與常見和弦（如 "Am"、"G7"、"F#m"）。
+ output=output.replace(/"([A-G])([#b]?)([^"]*)"/g,(all,letter,acc,tail)=>{
+   const root=letter+acc,pc=KEY_PC[root];
+   if(pc===undefined)return all;
+   const shifted=(pc+total+120)%12;
+   const names=prefer==="flat"?["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"]:["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+   return '"'+names[shifted]+tail+'"';
+ });
+ const keyLine=/^(\s*K:\s*)([A-Ga-g])([#b]?)(m|min|minor)?(.*)$/m;
+ output=output.replace(keyLine,(all,start,letter,acc,minor,tail)=>{
+   const k=target+(minor||"");
+   return start+k+tail;
+ });
+ return {output,from:old.root,to:target,interval:signed,total};
+}
+function message(text,type){const el=$("message");el.textContent=text;el.className="message "+type;}
+function run(){
+ try{
+  const source=$("abcInput").value;
+  if(!source.trim())throw new Error("請先貼上 ABC 樂譜內容。");
+  const target=$("targetKey").value,prefer=$("direction").value,oct=$("octave").value;
+  const result=transposeABC(source,target,prefer,oct);
+  $("output").textContent=result.output;
+  $("fromStat").textContent=result.from;$("toStat").textContent=result.to;
+  $("intervalStat").textContent=(result.interval>0?"+":"")+result.interval;
+  $("resultLabel").textContent="已完成轉換";
+  message("移調完成！請檢查輸出結果，複雜記譜或特殊符號建議再人工校對。","success");
+ }catch(e){message(e.message,"error");}
+}
+$("transposeBtn").addEventListener("click",run);
+$("resetBtn").addEventListener("click",()=>{
+ $("abcInput").value=demo;$("targetKey").value="C";$("direction").value="auto";$("octave").value="keep";
+ $("output").textContent="移調後的 ABC 樂譜會顯示在這裡。";
+ $("fromStat").textContent="C";$("toStat").textContent="C";$("intervalStat").textContent="0";
+ $("resultLabel").textContent="尚未轉換";$("message").className="message";$("message").textContent="";
+ $("abcInput").focus();
+});
+$("copyBtn").addEventListener("click",async()=>{
+ const value=$("output").textContent;
+ if(!value||value==="移調後的 ABC 樂譜會顯示在這裡。"){message("目前沒有可複製的移調結果。","error");return;}
+ try{await navigator.clipboard.writeText(value);message("已複製移調結果！","success");}
+ catch(e){message("瀏覽器未允許自動複製，請選取結果文字後手動複製。","error");}
+});
+$("downloadBtn").addEventListener("click",()=>{
+ const value=$("output").textContent;
+ if(!value||value==="移調後的 ABC 樂譜會顯示在這裡。"){message("請先完成移調，再下載檔案。","error");return;}
+ const blob=new Blob([value],{type:"text/plain;charset=utf-8"}),url=URL.createObjectURL(blob);
+ const a=document.createElement("a");a.href=url;a.download="transposed-score.abc";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+ message("ABC 檔案已準備下載。","success");
+});
+$("targetKey").addEventListener("change",()=>{$("toStat").textContent=$("targetKey").value;});
+</script>
+</body>
+</html>
